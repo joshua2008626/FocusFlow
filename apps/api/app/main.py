@@ -24,7 +24,8 @@ def current_user(authorization: str = Header(default="")) -> str:
     return claims["sub"]
 
 _hits: dict[str, collections.deque] = collections.defaultdict(collections.deque)
-def rate_limit(user: str = Depends(current_user), limit: int = int(os.getenv("AI_RATE_LIMIT_PER_MIN", "10"))) -> str:
+def rate_limit(user: str = Depends(current_user)) -> str:
+    limit = int(os.getenv("AI_RATE_LIMIT_PER_MIN", "10"))
     q, now = _hits[user], time.monotonic()
     while q and now - q[0] > 60:
         q.popleft()
