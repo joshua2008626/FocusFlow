@@ -48,3 +48,9 @@ Web to Vercel (root `apps/web`, set `VITE_*` vars). API to Render (start: `uvico
 5. Flow AI: shows a configuration message until `LLM_API_KEY` is set on the API.
 
 See `SECURITY.md` for the security notes.
+
+## Limitations
+- Built on free tiers (Supabase, Vercel). Sign-up and password-reset emails are rate-limited, and an inactive free Supabase project can pause.
+- Planner and Flow AI require the FastAPI backend, which is not deployed in the live demo.
+- Reminders only fire while the app is open in the browser (no background push).
+- Early version: not load-tested or externally security-audited. XP and achievements are computed client-side.
