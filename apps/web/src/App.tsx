@@ -1,0 +1,21 @@
+import { useEffect, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import { supabase } from './supabase';
+import { Dashboard } from './Dashboard'; import { Subjects } from './Subjects'; import { Analytics } from './Analytics'; import { Planner } from './Planner'; import { FlowAI } from './FlowAI'; import { Board } from './Board'; import { Achievements } from './Achievements'; import { Settings } from './Settings'; import { CalendarView, RemindersWatcher } from './Calendar'; import { Landing } from './Landing'; import { Auth } from './Auth'; import { Tasks } from './Tasks'; import { Timer } from './Timer';
+import './styles.css';
+
+export default function App() {
+  const [session, setSession] = useState<Session | null>(null); const [ready, setReady] = useState(false);
+  type Tab = 'home' | 'tasks' | 'subjects' | 'timer' | 'plan' | 'stats' | 'ai' | 'board' | 'ach' | 'set' | 'cal'; const TABS = ['home','tasks','subjects','timer','plan','stats','ai','board','ach','set','cal']; const fromHash = (): Tab => (TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'home') as Tab; const [tab, setTabState] = useState<Tab>(fromHash); const setTab = (t: Tab) => { location.hash = t; };
+  useEffect(() => { const h = () => setTabState(fromHash()); window.addEventListener('hashchange', h); return () => window.removeEventListener('hashchange', h); }, []); const [showAuth, setShowAuth] = useState(false); const [theme, setTheme] = useState(localStorage.getItem('ff.theme') || 'dark');
+  useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem('ff.theme', theme); }, [theme]);
+  useEffect(() => { if (!supabase) { setReady(true); return; }
+    supabase.auth.getSession().then(({ data }) => { setSession(data.session); setReady(true); });
+    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s)); return () => data.subscription.unsubscribe(); }, []);
+  if (!ready) return <div className="app mu">Loading…</div>;
+  return (<div className="app"><div className="nav"><img src="/favicon.svg" width={28} alt="" /><b>FocusFlow</b>
+    {session && <><button className={tab === 'home' ? 'on' : 'g'} onClick={() => setTab('home')}>Home</button><button className={tab === 'tasks' ? 'on' : 'g'} onClick={() => setTab('tasks')}>Tasks</button><button className={tab === 'subjects' ? 'on' : 'g'} onClick={() => setTab('subjects')}>Subjects</button><button className={tab === 'cal' ? 'on' : 'g'} onClick={() => setTab('cal')}>Calendar</button><button className={tab === 'board' ? 'on' : 'g'} onClick={() => setTab('board')}>Board</button><button className={tab === 'plan' ? 'on' : 'g'} onClick={() => setTab('plan')}>Planner</button><button className={tab === 'stats' ? 'on' : 'g'} onClick={() => setTab('stats')}>Analytics</button><button className={tab === 'ai' ? 'on' : 'g'} onClick={() => setTab('ai')}>Flow AI</button><button className={tab === 'ach' ? 'on' : 'g'} onClick={() => setTab('ach')}>Rewards</button><button className={tab === 'set' ? 'on' : 'g'} onClick={() => setTab('set')}>Settings</button><button className={tab === 'timer' ? 'on' : 'g'} onClick={() => setTab('timer')}>Focus</button></>}
+    <span className="sp" /><button className="g" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? 'Light' : 'Dark'}</button>
+    {session && <button className="g" onClick={() => supabase!.auth.signOut()}>Log out</button>}</div>
+    {session && <RemindersWatcher />}{!session ? (showAuth ? <Auth /> : <Landing onStart={() => setShowAuth(true)} />) : tab === 'home' ? <Dashboard user={session.user.id} name={session.user.user_metadata?.full_name || ''} go={setTab} /> : tab === 'tasks' ? <Tasks userId={session.user.id} /> : tab === 'subjects' ? <Subjects userId={session.user.id} /> : tab === 'plan' ? <Planner userId={session.user.id} /> : tab === 'stats' ? <Analytics /> : tab === 'ai' ? <FlowAI /> : tab === 'cal' ? <CalendarView userId={session.user.id} /> : tab === 'board' ? <Board userId={session.user.id} /> : tab === 'ach' ? <Achievements userId={session.user.id} /> : tab === 'set' ? <Settings userId={session.user.id} /> : <Timer userId={session.user.id} />}</div>);
+}

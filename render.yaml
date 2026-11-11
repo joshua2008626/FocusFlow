@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: focusflow-api
+    runtime: python
+    rootDir: apps/api
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_BASE_URL
+        value: https://api.openai.com/v1
+      - key: LLM_MODEL
+        sync: false
